@@ -2,7 +2,7 @@ import { PaymentFilterDto } from '../../application/dto/payment-filter.dto';
 import { PaymentMethod } from '../../domain/enums/payment-method.enum';
 import { PaymentStatus } from '../../domain/enums/payment-status.enum';
 
-describe('DTOs and Mappers', () => {
+describe('PaymentFilterDto', () => {
 
   describe('PaymentFilterDto', () => {
     it('should create instance with all filters', () => {

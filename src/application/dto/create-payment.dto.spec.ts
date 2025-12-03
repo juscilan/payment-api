@@ -1,7 +1,7 @@
 import { CreatePaymentDto } from '../../application/dto/create-payment.dto';
 import { PaymentMethod } from '../../domain/enums/payment-method.enum';
 
-describe('DTOs and Mappers', () => {
+describe('CreatePaymentDto', () => {
   describe('CreatePaymentDto', () => {
     it('should create instance from raw data', () => {
       const dto = new CreatePaymentDto(

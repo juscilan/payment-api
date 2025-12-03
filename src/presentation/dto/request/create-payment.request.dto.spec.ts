@@ -4,7 +4,7 @@ import { UpdatePaymentRequestDto } from '../../../presentation/dto/request/updat
 import { PaymentMethod } from '../../../domain/enums/payment-method.enum';
 import { PaymentStatus } from '../../../domain/enums/payment-status.enum';
 
-describe('DTOs and Mappers', () => {
+describe('CreatePaymentRequestDto', () => {
   describe('CreatePaymentRequestDto', () => {
     it('should create instance with correct properties', () => {
       const dto = new CreatePaymentRequestDto();
