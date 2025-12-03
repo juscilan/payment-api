@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { PaymentModule } from './payment.module'; // Update this path accordingly
+import { PaymentModule } from './payment/payment.module'; // Update this path accordingly
 import { PrismaService } from './infrastructure/adapters/database/prisma.service';
 import { ValidationPipe } from './common/pipes/validation.pipe';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
