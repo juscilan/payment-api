@@ -4,7 +4,6 @@ import { PaymentMethod } from '../../../domain/enums/payment-method.enum';
 import { PaymentStatus } from '../../../domain/enums/payment-status.enum';
 
 describe('DTOs and Mappers', () => {
-
   describe('PaymentResponseDto', () => {
     it('should map from domain entity correctly', () => {
       const payment = new Payment(
@@ -52,5 +51,4 @@ describe('DTOs and Mappers', () => {
       expect(dto.status).toBe(PaymentStatus.PENDING);
     });
   });
-
 });
