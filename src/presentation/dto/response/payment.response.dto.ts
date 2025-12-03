@@ -20,8 +20,8 @@ export class PaymentResponseDto {
       paymentMethod: payment.paymentMethod,
       status: payment.status,
       externalId: payment.externalId,
-      createdAt: payment.createdAt || new Date(), // Default to current date if undefined
-      updatedAt: payment.updatedAt || new Date(), // Default to current date if undefined
+      createdAt: payment.createdAt || new Date(),
+      updatedAt: payment.updatedAt || new Date(),
     };
   }
 }
