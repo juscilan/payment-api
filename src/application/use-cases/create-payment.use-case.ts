@@ -31,7 +31,7 @@ export class CreatePaymentUseCase {
           amount: dto.amount,
           description: dto.description,
           cpf: dto.cpf,
-          external_reference: crypto?.randomUUID() || 'mock',
+          external_reference: crypto?.randomUUID(),
         });
         externalId = preference.id;
       } catch (error) {
