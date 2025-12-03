@@ -20,7 +20,7 @@ import { UpdatePaymentRequestDto } from '../dto/request/update-payment.request.d
 import { PaymentResponseDto } from '../dto/response/payment.response.dto';
 import { PaymentFilterDto } from '../../application/dto/payment-filter.dto';
 
-@Controller('api/payment')
+@Controller('payment')
 export class PaymentController {
   constructor(
     private readonly createPaymentUseCase: CreatePaymentUseCase,
