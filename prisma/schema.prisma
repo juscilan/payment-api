@@ -1,0 +1,412 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS (Definições de tipos enumerados)
+// ============================================
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAIL
+  CANCELLED
+  REFUNDED
+  EXPIRED
+}
+
+// ============================================
+// MODELS (Tabelas do banco de dados)
+// ============================================
+
+model Payment {
+  /// Identificador único do pagamento (UUID)
+  id String @id @default(cuid())
+
+  /// CPF do cliente (11 dígitos)
+  cpf String @db.VarChar(11)
+
+  /// Descrição da cobrança
+  description String @db.VarChar(255)
+
+  /// Valor da transação (com precisão de 2 casas decimais)
+  amount Decimal @db.Decimal(10, 2)
+
+  /// Meio de pagamento (PIX ou CREDIT_CARD)
+  paymentMethod PaymentMethod
+
+  /// Status atual do pagamento
+  status PaymentStatus @default(PENDING)
+
+  /// ID externo para integração com gateways de pagamento
+  externalId String? @db.VarChar(100)
+
+  /// URL de notificação do webhook
+  webhookUrl String? @db.VarChar(500)
+
+  /// Dados adicionais em formato JSON (metadata)
+  metadata Json? @default("{}")
+
+  /// Data de criação do registro
+  createdAt DateTime @default(now()) @map("created_at")
+
+  /// Data da última atualização
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  /// Data de expiração do pagamento (para PIX)
+  expiresAt DateTime? @map("expires_at")
+
+  /// Data de confirmação do pagamento
+  paidAt DateTime? @map("paid_at")
+
+  /// Data de falha/cancelamento
+  failedAt DateTime? @map("failed_at")
+
+  /// ID da transação no gateway de pagamento
+  gatewayTransactionId String? @map("gateway_transaction_id") @db.VarChar(100)
+
+  /// Link do pagamento (para PIX ou boleto)
+  paymentLink String? @map("payment_link") @db.VarChar(500)
+
+  /// QR Code (para PIX)
+  qrCode String? @map("qr_code") @db.Text
+
+  /// Código do PIX
+  pixCode String? @map("pix_code") @db.Text
+
+  /// Chave PIX do recebedor
+  pixKey String? @map("pix_key") @db.VarChar(100)
+
+  /// Tipo da chave PIX (CPF, CNPJ, Email, Telefone, Aleatória)
+  pixKeyType String? @map("pix_key_type") @db.VarChar(20)
+
+  /// Nome do titular da conta
+  accountHolderName String? @map("account_holder_name") @db.VarChar(100)
+
+  /// Instituição financeira
+  financialInstitution String? @map("financial_institution") @db.VarChar(100)
+
+  /// Bandeira do cartão (para pagamentos com cartão)
+  cardBrand String? @map("card_brand") @db.VarChar(50)
+
+  /// Últimos 4 dígitos do cartão
+  cardLastFour String? @map("card_last_four") @db.VarChar(4)
+
+  /// Método de captura do cartão
+  captureMethod String? @map("capture_method") @db.VarChar(50)
+
+  /// Código de autorização da operadora do cartão
+  authorizationCode String? @map("authorization_code") @db.VarChar(100)
+
+  /// ID do cliente no gateway de pagamento
+  gatewayCustomerId String? @map("gateway_customer_id") @db.VarChar(100)
+
+  /// IP do cliente
+  clientIp String? @map("client_ip") @db.VarChar(45)
+
+  /// User agent do cliente
+  userAgent String? @map("user_agent") @db.VarChar(500)
+
+  /// ID de correlação para rastreamento
+  correlationId String? @map("correlation_id") @db.VarChar(100)
+
+  /// Flag indicando se é um pagamento de teste
+  isTest Boolean @default(false) @map("is_test")
+
+  /// Flag indicando se o pagamento foi notificado
+  notified Boolean @default(false)
+
+  /// Tentativas de notificação
+  notificationAttempts Int @default(0) @map("notification_attempts")
+
+  /// Última tentativa de notificação
+  lastNotificationAttempt DateTime? @map("last_notification_attempt")
+
+  /// Erro da última notificação
+  lastNotificationError String? @map("last_notification_error") @db.VarChar(500)
+
+  // ============================================
+  // RELACIONAMENTOS
+  // ============================================
+
+  /// Logs de webhook associados a este pagamento
+  webhookLogs PaymentWebhookLog[]
+
+  /// Logs de auditoria associados a este pagamento
+  auditLogs PaymentAuditLog[]
+
+  /// Falhas associadas a este pagamento
+  failedPayments FailedPayment[]
+
+  // ============================================
+  // ÍNDICES para otimização de queries
+  // ============================================
+
+  // ============================================
+  // CONSTRAINTS e VALIDAÇÕES
+  // ============================================
+
+  /// Índice para busca por CPF
+  @@index([cpf])
+  /// Índice para busca por status
+  @@index([status])
+  /// Índice para busca por método de pagamento
+  @@index([paymentMethod])
+  /// Índice para busca por data de criação
+  @@index([createdAt])
+  /// Índice composto para queries comuns
+  @@index([cpf, status])
+  /// Índice composto para relatórios
+  @@index([paymentMethod, status, createdAt])
+  /// Índice para busca por ID externo
+  @@index([externalId])
+  /// Índice para transações do gateway
+  @@index([gatewayTransactionId])
+  /// Índice para busca por data de expiração
+  @@index([expiresAt])
+  /// Índice para busca por data de pagamento
+  @@index([paidAt])
+  /// Índice para busca por correlationId
+  @@index([correlationId])
+  /// Índice para queries de notificação
+  @@index([notified, status, createdAt])
+  /// Índice para limpeza de pagamentos antigos
+  @@index([createdAt, status])
+  /// Nome da tabela no banco de dados
+  @@map("payments")
+}
+
+// ============================================
+// MODEL: PaymentWebhookLog (Logs de webhooks)
+// ============================================
+
+model PaymentWebhookLog {
+  /// ID único do log
+  id String @id @default(cuid())
+
+  /// Referência ao pagamento
+  paymentId String @map("payment_id")
+
+  /// Tipo de evento do webhook
+  eventType String @map("event_type") @db.VarChar(100)
+
+  /// Origem do webhook (mercado_pago, stripe, etc)
+  source String @db.VarChar(50)
+
+  /// Payload recebido
+  payload Json
+
+  /// Headers recebidos
+  headers Json?
+
+  /// IP de origem
+  sourceIp String? @map("source_ip") @db.VarChar(45)
+
+  /// Status da processamento
+  status String @default("RECEIVED") @db.VarChar(20)
+
+  /// Mensagem de erro (se houver)
+  errorMessage String? @map("error_message") @db.Text
+
+  /// Stack trace do erro
+  errorStack String? @map("error_stack") @db.Text
+
+  /// Data de recebimento
+  receivedAt DateTime @default(now()) @map("received_at")
+
+  /// Data de processamento
+  processedAt DateTime? @map("processed_at")
+
+  /// Tempo de processamento em ms
+  processingTime Int? @map("processing_time")
+
+  /// Tentativas de reprocessamento
+  retryCount Int @default(0) @map("retry_count")
+
+  /// Data da última tentativa
+  lastRetryAt DateTime? @map("last_retry_at")
+
+  /// Relacionamento com Payment
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  // ÍNDICES
+  @@index([paymentId])
+  @@index([eventType])
+  @@index([source])
+  @@index([status])
+  @@index([receivedAt])
+  @@index([paymentId, receivedAt])
+  @@map("payment_webhook_logs")
+}
+
+// ============================================
+// MODEL: PaymentAuditLog (Logs de auditoria)
+// ============================================
+
+model PaymentAuditLog {
+  /// ID único do log de auditoria
+  id String @id @default(cuid())
+
+  /// Referência ao pagamento
+  paymentId String @map("payment_id")
+
+  /// Tipo de ação (CREATE, UPDATE, DELETE, STATUS_CHANGE)
+  action String @db.VarChar(50)
+
+  /// Campo alterado
+  field String? @db.VarChar(100)
+
+  /// Valor anterior
+  oldValue String? @map("old_value") @db.Text
+
+  /// Novo valor
+  newValue String? @map("new_value") @db.Text
+
+  /// ID do usuário que realizou a ação
+  userId String? @map("user_id") @db.VarChar(100)
+
+  /// IP do usuário
+  userIp String? @map("user_ip") @db.VarChar(45)
+
+  /// User agent do usuário
+  userAgent String? @map("user_agent") @db.VarChar(500)
+
+  /// Dados adicionais em JSON
+  metadata Json? @default("{}")
+
+  /// Data da ação
+  createdAt DateTime @default(now()) @map("created_at")
+
+  /// Relacionamento com Payment
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  // ÍNDICES
+  @@index([paymentId])
+  @@index([action])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([paymentId, createdAt])
+  @@map("payment_audit_logs")
+}
+
+// ============================================
+// MODEL: FailedPayment (Pagamentos com falha)
+// ============================================
+
+model FailedPayment {
+  /// ID único da falha
+  id String @id @default(cuid())
+
+  /// Referência ao pagamento (pode ser null se falhar antes de criar)
+  paymentId String? @map("payment_id")
+
+  /// CPF do cliente
+  cpf String @db.VarChar(11)
+
+  /// Valor da transação
+  amount Decimal @db.Decimal(10, 2)
+
+  /// Método de pagamento
+  paymentMethod PaymentMethod
+
+  /// Código do erro
+  errorCode String @map("error_code") @db.VarChar(100)
+
+  /// Mensagem de erro
+  errorMessage String @map("error_message") @db.Text
+
+  /// Stack trace do erro
+  errorStack String? @map("error_stack") @db.Text
+
+  /// Estágio da falha (VALIDATION, PROCESSING, GATEWAY, WEBHOOK)
+  failureStage String @map("failure_stage") @db.VarChar(50)
+
+  /// Dados da requisição que falhou
+  requestData Json? @map("request_data")
+
+  /// Resposta do gateway (se houver)
+  gatewayResponse Json? @map("gateway_response")
+
+  /// Número de tentativas
+  attemptCount Int @default(1) @map("attempt_count")
+
+  /// Data da última tentativa
+  lastAttemptAt DateTime @default(now()) @map("last_attempt_at")
+
+  /// Flag indicando se foi recuperado
+  recovered Boolean @default(false)
+
+  /// Data de recuperação
+  recoveredAt DateTime? @map("recovered_at")
+
+  /// Data de criação
+  createdAt DateTime @default(now()) @map("created_at")
+
+  /// Relacionamento com Payment (opcional)
+  payment Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  // ÍNDICES
+  @@index([paymentId])
+  @@index([cpf])
+  @@index([errorCode])
+  @@index([failureStage])
+  @@index([recovered])
+  @@index([createdAt])
+  @@map("failed_payments")
+}
+
+// ============================================
+// MODEL: PaymentConfiguration (Configurações)
+// ============================================
+
+model PaymentConfiguration {
+  /// Chave única da configuração
+  id String @id @default(cuid())
+
+  /// Chave da configuração
+  configKey String @unique @map("config_key") @db.VarChar(100)
+
+  /// Valor da configuração
+  configValue Json @map("config_value")
+
+  /// Tipo da configuração
+  configType String @map("config_type") @db.VarChar(50)
+
+  /// Descrição da configuração
+  description String? @db.VarChar(500)
+
+  /// Se a configuração está ativa
+  isActive Boolean @default(true) @map("is_active")
+
+  /// Categoria da configuração
+  category String @default("GENERAL") @db.VarChar(50)
+
+  /// Data de criação
+  createdAt DateTime @default(now()) @map("created_at")
+
+  /// Data de atualização
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  /// Quem criou/atualizou
+  updatedBy String? @map("updated_by") @db.VarChar(100)
+
+  // ÍNDICES
+  @@index([configKey])
+  @@index([category])
+  @@index([isActive])
+  @@map("payment_configurations")
+}
