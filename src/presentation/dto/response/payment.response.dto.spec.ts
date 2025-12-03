@@ -3,7 +3,7 @@ import { Payment } from '../../../domain/entities/payment.entity';
 import { PaymentMethod } from '../../../domain/enums/payment-method.enum';
 import { PaymentStatus } from '../../../domain/enums/payment-status.enum';
 
-describe('DTOs and Mappers', () => {
+describe('PaymentResponseDto', () => {
   describe('PaymentResponseDto', () => {
     it('should map from domain entity correctly', () => {
       const payment = new Payment(
