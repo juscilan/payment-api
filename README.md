@@ -35,7 +35,8 @@ API to manage payments (PIX and Credit Card) built with NestJS, Prisma and a Mer
 ## Getting started
 
 Prerequisites
-- Node.js (>= 18)
+- Node.js (>= 24)
+- Aplly nvm use (the project contains nvmrc file on root)
 - PostgreSQL (or use Docker Compose included)
 
 1. Install dependencies
