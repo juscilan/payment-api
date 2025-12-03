@@ -1,6 +1,5 @@
-// src/payment/payment.service.ts
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../infrastructure/adapters/database/prisma.service';
+import { PrismaService } from '../../infrastructure/adapters/database/prisma.service'; // Ensure this path is correct
 
 @Injectable()
 export class PaymentService {

@@ -6,7 +6,7 @@ import { GetPaymentUseCase } from './application/use-cases/get-payment.use-case'
 import { ListPaymentsUseCase } from './application/use-cases/list-payments.use-case';
 import { PaymentRepository } from './infrastructure/repositories/payment.repository';
 import { MercadoPagoAdapter } from './infrastructure/adapters/mercado-pago/mercado-pago.adapter';
-import { PrismaService } from './infrastructure/adapters/database/prisma.service'; // Updated path
+import { PrismaService } from './infrastructure/adapters/database/prisma.service';
 
 @Module({
   controllers: [PaymentController],
