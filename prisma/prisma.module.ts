@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 // Ensure the file exists
-import { PrismaService } from '../infrastructure/adapters/database/prisma.service'; // Check if this file is present
+import { PrismaService } from '../src/infrastructure/adapters/database/prisma.service'; // Check if this file is present
 
 @Global() // Makes PrismaService available globally
 @Module({
